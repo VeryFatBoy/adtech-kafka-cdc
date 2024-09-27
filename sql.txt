@@ -1,0 +1,41 @@
+DROP DATABASE IF EXISTS adtech;
+CREATE DATABASE IF NOT EXISTS adtech;
+
+USE adtech;
+
+DROP LINK adtech.link;
+
+CREATE LINK adtech.link AS MONGODB
+CONFIG '{"mongodb.hosts": "<primary>:27017, <secondary>:27017, <secondary>:27017",
+        "collection.include.list": "adtech.*",
+        "mongodb.ssl.enabled": "true",
+        "mongodb.authsource": "admin",
+        "mongodb.members.auto.discover": "false"}'
+CREDENTIALS '{"mongodb.user": "<username>",
+            "mongodb.password": "<password>"}';
+
+CREATE TABLES AS INFER PIPELINE AS LOAD DATA LINK adtech.link '*' FORMAT AVRO;
+
+SHOW TABLES;
+
+DESCRIBE events;
+
+SHOW PIPELINES;
+
+START ALL PIPELINES;
+
+SELECT COUNT(*) FROM events;
+
+SELECT _id :> JSON AS _id, _more :> JSON AS _more FROM events LIMIT 1;
+
+-- Cleanup
+
+STOP PIPELINE `adtech.events`;
+
+DROP PIPELINE `adtech.events`;
+
+DROP LINK adtech.link;
+
+DROP TABLE IF EXISTS events;
+
+DROP DATABASE IF EXISTS adtech;
